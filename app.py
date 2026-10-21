@@ -6,17 +6,21 @@ app = Flask(__name__)
 DATA_FILE = 'attivita.json'
 
 def carica_dati():
-    if os.path.exists(DATA_FILE):
-        try:
-            with open(DATA_FILE, 'r') as f:
-                return json.load(f)
-        except Exception:
-            return []
-    return []
+    if not os.path.exists(DATA_FILE):
+        return []
+    try:
+        with open(DATA_FILE, 'r') as f:
+            data = json.load(f)
+            return data if isinstance(data, list) else []
+    except Exception:
+        return []
 
 def salva_dati(dati):
-    with open(DATA_FILE, 'w') as f:
-        json.dump(dati, f, indent=4)
+    try:
+        with open(DATA_FILE, 'w') as f:
+            json.dump(dati, f, indent=4)
+    except Exception:
+        pass
 
 @app.route('/')
 def index():
@@ -28,8 +32,9 @@ def api_attivita():
     if request.method == 'POST':
         nuova = request.json
         dati = carica_dati()
-        dati.insert(0, nuova)
-        salva_dati(dati)
+        if nuova:
+            dati.insert(0, nuova)
+            salva_dati(dati)
         return jsonify({"status": "success", "data": dati})
     return jsonify(carica_dati())
 
